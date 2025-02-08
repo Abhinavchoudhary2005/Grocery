@@ -13,6 +13,7 @@ import ContactUs from "./pages/ContactUs";
 import Sell from "./pages/Sell";
 import ListedProductsPage from "./pages/ListedProductsPage";
 import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   const { theme } = useThemeStore();
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/sell" element={<Sell />} />
         <Route path="/listed-products" element={<ListedProductsPage />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </div>
