@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    // Fixes 404 on refresh for SPA (Single Page Application)
-    historyFallback: true,
+    fallback: "index.html",
   },
 });
