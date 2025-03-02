@@ -55,7 +55,7 @@ app.post("/vertex-ai", async (req, res) => {
 
     console.log("📩 Received Request:", { detectedText, allProductNames });
 
-    const prompt = `Translate the grocery list to English and match it to available products. Extract structured data in [[quantity, name, unit], ...] format if the available unit is in grams and user given in kg convert the kg in grams and adjust the qantity accordingly also true for vice versa. only provide the array no text before after only array. Grocery List: "${detectedText}". Available products: ${JSON.stringify(
+    const prompt = `Translate the grocery list to English and match it to available products. Extract structured data in [[quantity, name, unit], ...] format if the available unit is in kg and user given in grams convert the grams in kg if the available unit is in grams and user given in kg convert the kg in grams and adjust the qantity accordingly ensure quantity does not exceed 100 like 100kg or more . only provide the array no text before after only array. Grocery List: "${detectedText}". Available products: ${JSON.stringify(
       allProductNames
     )}`;
 

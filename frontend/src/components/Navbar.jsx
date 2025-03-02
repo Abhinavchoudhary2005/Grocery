@@ -83,11 +83,13 @@ const Navbar = () => {
 
   // Handle image upload and text detection using Google Vision API
   const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
+    const fileInput = event.target;
+    const file = fileInput.files[0];
     if (!file) return;
 
     setLoading(true);
     try {
+      fileInput.value = "";
       // Step 1: OCR - Extract text from image
       const ocrResponse = await fetch(
         `https://vision.googleapis.com/v1/images:annotate?key=${
@@ -164,12 +166,15 @@ const Navbar = () => {
         return;
       }
 
+      const notSoldItemsText =
+        notSoldItems?.length > 0
+          ? `\n\nProducts not available:\n${notSoldItems.join(", ")}`
+          : "";
+
       const userConfirmed = window.confirm(
         `Items to be added:\n${formattedItems
           .map(([q, n, u]) => `${q} ${u} of ${n}`)
-          .join("\n")}\n\nProducts not available:\n${notSoldItems.join(
-          ", "
-        )}\n\nConfirm adding to cart?`
+          .join("\n")}${notSoldItemsText}\n\nConfirm adding to cart?`
       );
 
       if (!userConfirmed) {
