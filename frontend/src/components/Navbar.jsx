@@ -119,17 +119,20 @@ const Navbar = () => {
       console.log("Detected Text:", detectedText);
 
       // Step 2: Call Backend to Process Text with AI
-      const response = await fetch("http://localhost:8000/vertex-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          detectedText,
-          allProductNames: allProduct.map((p) => ({
-            name: p.name,
-            quantity: p.quantity,
-          })),
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_KEY}/vertex-ai`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            detectedText,
+            allProductNames: allProduct.map((p) => ({
+              name: p.name,
+              quantity: p.quantity,
+            })),
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("AI Extracted Data:", data);
