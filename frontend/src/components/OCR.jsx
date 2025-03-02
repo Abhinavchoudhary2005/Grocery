@@ -25,12 +25,22 @@ const OCR = () => {
 
   const startScanner = async () => {
     try {
+      setShowScanner(true); // Ensure video is rendered
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
+
+      if (!videoRef.current) {
+        console.error("Video element not found!");
+        toast.error("Failed to access camera.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
+
       videoRef.current.srcObject = stream;
-      setShowScanner(true);
     } catch (error) {
+      console.error("Camera Error:", error);
       toast.error("Camera access denied.");
     }
   };
@@ -38,8 +48,9 @@ const OCR = () => {
   const captureImage = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+    if (!video || !canvas) return;
 
+    const context = canvas.getContext("2d");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -52,7 +63,9 @@ const OCR = () => {
 
   const stopScanner = () => {
     const stream = videoRef.current?.srcObject;
-    stream?.getTracks().forEach((track) => track.stop());
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
     setShowScanner(false);
   };
 
@@ -227,28 +240,26 @@ const OCR = () => {
         />
       </div>
 
-      {showScanner && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80">
-          <video
-            ref={videoRef}
-            autoPlay
-            className="w-full max-w-md rounded-lg"
-          />
-          <button
-            className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg"
-            onClick={captureImage}
-          >
-            Capture
-          </button>
-          <button
-            className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg"
-            onClick={stopScanner}
-          >
-            Cancel
-          </button>
-          <canvas ref={canvasRef} className="hidden"></canvas>
-        </div>
-      )}
+      <div
+        className={`fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 ${
+          showScanner ? "block" : "hidden"
+        }`}
+      >
+        <video ref={videoRef} autoPlay className="w-full max-w-md rounded-lg" />
+        <button
+          className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg"
+          onClick={captureImage}
+        >
+          Capture
+        </button>
+        <button
+          className="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg"
+          onClick={stopScanner}
+        >
+          Cancel
+        </button>
+        <canvas ref={canvasRef} className="hidden"></canvas>
+      </div>
     </>
   );
 };
