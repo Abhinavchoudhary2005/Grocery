@@ -241,7 +241,7 @@ const OCR = () => {
       </div>
 
       <div
-        className={`fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 ${
+        className={`fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50 ${
           showScanner ? "block" : "hidden"
         }`}
       >
