@@ -10,6 +10,7 @@ const VoiceAssistant = () => {
   const token = localStorage.getItem("token");
 
   const [listening, setListening] = useState(false);
+  const [recognizedText, setRecognizedText] = useState(""); // ✅ Store recognized text
   const [recognition, setRecognition] = useState(null);
 
   const startListening = async () => {
@@ -26,34 +27,30 @@ const VoiceAssistant = () => {
         window.webkitSpeechRecognition)();
       speech.lang = "en-US";
       speech.continuous = false;
-      speech.interimResults = false;
+      speech.interimResults = true; // ✅ Enable interim results for live updates
 
       speech.onstart = () => {
         setListening(true);
+        setRecognizedText(""); // ✅ Clear previous text
         console.log("Listening started...");
+      };
+
+      speech.onresult = (event) => {
+        const text = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join("");
+        setRecognizedText(text); // ✅ Update recognized text in UI
       };
 
       speech.onend = () => {
         setListening(false);
         console.log("Listening ended.");
-      };
-
-      speech.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        console.log("Recognized Speech:", text);
-        processVoiceCommand(text);
+        if (recognizedText.trim()) processVoiceCommand(recognizedText);
       };
 
       speech.onerror = (event) => {
         console.error("Speech Recognition Error:", event.error);
         toast.error(`Error: ${event.error}`);
-
-        if (event.error === "not-allowed") {
-          toast.error(
-            "Microphone access denied. Enable permissions in browser settings."
-          );
-        }
-
         setListening(false);
       };
 
@@ -65,9 +62,7 @@ const VoiceAssistant = () => {
   };
 
   const stopListening = () => {
-    if (recognition) {
-      recognition.stop();
-    }
+    if (recognition) recognition.stop();
     setListening(false);
   };
 
@@ -166,8 +161,12 @@ const VoiceAssistant = () => {
       </div>
 
       {listening && (
-        <div className="fixed inset-0 bg-opacity-50 bg-gray-700 flex items-center justify-center">
+        <div className="fixed inset-0 bg-opacity-50 bg-gray-700 flex flex-col items-center justify-center">
           <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
+          <p className="text-white mt-4 text-lg">
+            {recognizedText || "Listening..."}
+          </p>{" "}
+          {/* ✅ Shows live speech */}
           <button
             onClick={stopListening}
             className="absolute bottom-10 px-4 py-2 bg-red-500 text-white rounded-lg"
