@@ -12,49 +12,56 @@ const VoiceAssistant = () => {
   const [listening, setListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
 
-  const startListening = () => {
+  const startListening = async () => {
     if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
       toast.error("Speech Recognition not supported in this browser.");
       return;
     }
 
-    const speech = new (window.SpeechRecognition ||
-      window.webkitSpeechRecognition)();
-    speech.lang = "en-US";
-    speech.continuous = false;
-    speech.interimResults = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop()); // Release the microphone
 
-    speech.onstart = () => {
-      setListening(true);
-      console.log("Listening started...");
-    };
+      const speech = new (window.SpeechRecognition ||
+        window.webkitSpeechRecognition)();
+      speech.lang = "en-US";
+      speech.continuous = false;
+      speech.interimResults = false;
 
-    speech.onend = () => {
-      setListening(false);
-      console.log("Listening ended.");
-    };
+      speech.onstart = () => {
+        setListening(true);
+        console.log("Listening started...");
+      };
 
-    speech.onresult = (event) => {
-      const text = event.results[0][0].transcript;
-      console.log("Recognized Speech:", text);
-      processVoiceCommand(text);
-    };
+      speech.onend = () => {
+        setListening(false);
+        console.log("Listening ended.");
+      };
 
-    speech.onerror = (event) => {
-      console.error("Speech Recognition Error:", event.error);
-      toast.error(`Error: ${event.error}`);
+      speech.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        console.log("Recognized Speech:", text);
+        processVoiceCommand(text);
+      };
 
-      if (event.error === "network") {
-        toast.error("Check internet connection or try in Incognito Mode.");
-      } else if (event.error === "not-allowed") {
-        toast.error("Enable microphone permissions in browser settings.");
-      }
+      speech.onerror = (event) => {
+        console.error("Speech Recognition Error:", event.error);
+        toast.error(`Error: ${event.error}`);
 
-      setListening(false);
-    };
+        if (event.error === "not-allowed") {
+          toast.error(
+            "Microphone access denied. Enable permissions in browser settings."
+          );
+        }
 
-    setRecognition(speech);
-    speech.start();
+        setListening(false);
+      };
+
+      setRecognition(speech);
+      speech.start();
+    } catch (error) {
+      toast.error("Microphone access is required to use voice commands.");
+    }
   };
 
   const stopListening = () => {
