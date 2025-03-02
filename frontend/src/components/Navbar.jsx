@@ -173,7 +173,7 @@ const Navbar = () => {
 
       const userConfirmed = window.confirm(
         `Items to be added:\n${formattedItems
-          .map(([q, n, u]) => `${q} ${u} of ${n}`)
+          .map(([q, n, u]) => `${q} X ${u} of ${n}`)
           .join("\n")}${notSoldItemsText}\n\nConfirm adding to cart?`
       );
 
