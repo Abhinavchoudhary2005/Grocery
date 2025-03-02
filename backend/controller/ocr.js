@@ -32,11 +32,17 @@ const ocr = async (req, res) => {
 
       if (isNaN(parsedQuantity) || parsedQuantity <= 0) continue;
 
-      const product = await Product.findOne({
+      // Find all products matching the name (case-insensitive)
+      const products = await Product.find({
         name: { $regex: `^${name}$`, $options: "i" },
       });
 
-      if (product) {
+      if (products.length > 0) {
+        // Select the product with the lowest price
+        const product = products.reduce((prev, curr) =>
+          prev.new_price < curr.new_price ? prev : curr
+        );
+
         let productExists = false;
 
         for (let i = 0; i < user.cart.length; i++) {
