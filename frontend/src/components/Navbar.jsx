@@ -13,9 +13,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { CartContext } from "../context/CartContex.jsx";
+import { Productcontext } from "../context/Productcontext";
 import logo from "../assets/logo.png";
 import * as jwt_decode from "jwt-decode";
-import Tesseract from "tesseract.js";
 
 // Categories for your navigation
 const categories = [
@@ -37,6 +37,7 @@ const Navbar = () => {
   const token = localStorage.getItem("token");
 
   const { cart, fetchCart } = useContext(CartContext);
+  const { allProduct } = useContext(Productcontext);
   const userRole = token ? jwt_decode.jwtDecode(token).role : null;
 
   // Handle Category dropdown
@@ -85,41 +86,131 @@ const Navbar = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      setLoading(true);
-      try {
-        const { data } = await Tesseract.recognize(reader.result, "eng");
-        const detectedItems = data.text
-          .split("\n")
-          .filter((item) => item.trim() !== "");
+    setLoading(true);
+    try {
+      // Step 1: OCR - Extract text from image
+      const ocrResponse = await fetch(
+        `https://vision.googleapis.com/v1/images:annotate?key=${
+          import.meta.env.VITE_GOOGLE_VISION_API_KEY
+        }`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: { content: await fileToBase64(file) },
+                features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+              },
+            ],
+          }),
+        }
+      );
 
-        console.log("Detected Items:", detectedItems);
+      const ocrData = await ocrResponse.json();
+      let detectedText = ocrData.responses?.[0]?.fullTextAnnotation?.text || "";
 
-        // Send detected text to the backend
-        const response = await fetch(`${import.meta.env.VITE_API_KEY}/ocr`, {
+      if (!detectedText) {
+        toast.error("No text detected in image.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Detected Text:", detectedText);
+
+      // Step 2: Call Backend to Process Text with AI
+      const response = await fetch("http://localhost:8000/vertex-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          detectedText,
+          allProductNames: allProduct.map((p) => ({
+            name: p.name,
+            quantity: p.quantity,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+      console.log("AI Extracted Data:", data);
+
+      if (!data) {
+        toast.error("Failed to extract product details.");
+        setLoading(false);
+        return;
+      }
+
+      // Handle extracted data (same as before)
+      const formattedItems = [];
+      const notSoldItems = [];
+
+      data.forEach(([quantity, name, unit]) => {
+        const match = allProduct.find((p) =>
+          name.toLowerCase().includes(p.name.toLowerCase())
+        );
+        if (match) {
+          formattedItems.push([quantity, match.name, unit || match.quantity]);
+        } else {
+          notSoldItems.push(name);
+        }
+      });
+
+      if (formattedItems.length === 0) {
+        toast.error("No matching products found in store.");
+        setLoading(false);
+        return;
+      }
+
+      const userConfirmed = window.confirm(
+        `Items to be added:\n${formattedItems
+          .map(([q, n, u]) => `${q} ${u} of ${n}`)
+          .join("\n")}\n\nProducts not available:\n${notSoldItems.join(
+          ", "
+        )}\n\nConfirm adding to cart?`
+      );
+
+      if (!userConfirmed) {
+        toast("Operation cancelled.");
+        setLoading(false);
+        return;
+      }
+
+      console.log(formattedItems);
+
+      const backendResponse = await fetch(
+        `${import.meta.env.VITE_API_KEY}/ocr`,
+        {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `${token}`,
           },
-          body: JSON.stringify({ detectedItems }),
-        });
-
-        if (response.ok) {
-          toast.success("Items sent successfully!");
-          fetchCart()
-        } else {
-          toast.error("Failed to send data.");
+          body: JSON.stringify({ detectedItems: formattedItems }),
         }
-      } catch (error) {
-        console.error("Error detecting text:", error);
-        toast.error("Error processing the image.");
-      } finally {
-        setLoading(false);
+      );
+
+      if (backendResponse.ok) {
+        toast.success("Items added to cart successfully!");
+        fetchCart();
+      } else {
+        toast.error("Failed to add items to cart.");
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error("Error processing the image.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]); // Remove data prefix
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   return (

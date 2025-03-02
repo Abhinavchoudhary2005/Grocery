@@ -62,6 +62,7 @@ const Card = ({ product }) => {
       new_price: product.new_price,
       category: product.category,
       quantity: cartCount + 1,
+      weight: product.quantity,
     };
 
     try {
@@ -204,16 +205,15 @@ const Card = ({ product }) => {
         </div>
 
         <div className="flex justify-center items-center text-yellow-500 gap-1 mb-3">
-  Posted On:
-  <span className="text-sm text-gray-500">
-    {new Date(product.date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })}
-  </span>
-</div>
-
+          Posted On:
+          <span className="text-sm text-gray-500">
+            {new Date(product.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
 
         {cartCount === 0 ? (
           <button

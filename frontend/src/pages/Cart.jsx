@@ -135,7 +135,7 @@ const Cart = () => {
                       <h3 className="text-lg font-medium text-green-800">
                         {item.name}
                       </h3>
-                      <p className="text-sm text-gray-500">Best Quality</p>
+                      <p className="text-sm text-gray-500">{item.weight}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
