@@ -2,76 +2,84 @@ const User = require("../modules/user");
 const Product = require("../modules/product");
 
 const ocr = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res
+      .status(401)
+      .send({ error: "Unauthorized: User not authenticated" });
+  }
+
   const { detectedItems } = req.body;
 
-  if (!detectedItems || detectedItems.length === 0) {
+  if (
+    !detectedItems ||
+    !Array.isArray(detectedItems) ||
+    detectedItems.length === 0
+  ) {
     return res.status(400).send({ error: "No items detected." });
   }
 
   try {
     const user = await User.findById(req.user._id);
-
     if (!user) {
       return res.status(404).send({ error: "User not found" });
     }
 
     let addedProducts = [];
 
-    // Search for each detected item in the database
     for (const item of detectedItems) {
+      const [quantity, name, unit] = item;
+      const parsedQuantity = parseFloat(quantity);
+
+      if (isNaN(parsedQuantity) || parsedQuantity <= 0) continue;
+
       const product = await Product.findOne({
-        name: { $regex: item, $options: "i" },
+        name: { $regex: `^${name}$`, $options: "i" },
       });
 
       if (product) {
         let productExists = false;
 
-        // Check if product already exists in the user's cart
         for (let i = 0; i < user.cart.length; i++) {
           const cartItem = user.cart[i];
 
-          if (
-            cartItem.name === product.name &&
-            cartItem.category === product.category
-          ) {
-            // Update product quantity and total price if exists
+          if (cartItem.name.toLowerCase() === product.name.toLowerCase()) {
             user.cart.set(i, {
-              ...user.cart[i],
-              quantity: user.cart[i].quantity + 1,
-              totalPrice: (user.cart[i].quantity + 1) * product.new_price,
+              ...cartItem,
+              quantity: cartItem.quantity + parsedQuantity,
+              totalPrice:
+                (cartItem.quantity + parsedQuantity) * product.new_price,
             });
             productExists = true;
             break;
           }
         }
 
-        // If product doesn't exist, add it to the cart
         if (!productExists) {
-          const newProduct = {
+          user.cart.push({
             _id: product._id,
             name: product.name,
             image: product.image,
             old_price: product.old_price,
             new_price: product.new_price,
             category: product.category,
-            quantity: 1,
-            totalPrice: product.new_price,
-          };
-          user.cart.push(newProduct);
+            weight: product.quantity,
+            quantity: parsedQuantity,
+            totalPrice: parsedQuantity * product.new_price,
+          });
         }
 
-        addedProducts.push({ name: product.name, quantity: 1 });
+        addedProducts.push({
+          name: product.name,
+          quantity: parsedQuantity,
+          unit,
+        });
       }
     }
 
-    // Recalculate total cart value
-    let totalCartValue = user.cart.reduce(
+    user.totalCartValue = user.cart.reduce(
       (total, item) => total + item.totalPrice,
       0
     );
-
-    user.set({ totalCartValue });
-
     const savedUser = await user.save();
 
     res.status(200).send({

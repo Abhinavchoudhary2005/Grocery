@@ -10,6 +10,7 @@ const user = require("./routes/user");
 const cart = require("./routes/cart");
 const token = require("./routes/token");
 const ocr = require("./routes/ocr");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // PORT
 const PORT = process.env.PORT || 8000;
@@ -24,20 +25,16 @@ mongoose
     family: 4, // Use IPv4
   })
   .then(() => {
-    console.log("MongoDB connected...");
+    console.log("✅ MongoDB connected...");
   })
   .catch((error) => {
-    console.error("MongoDB connection error:", error);
+    console.error("❌ MongoDB connection error:", error);
   });
 
 // MIDDLEWARE
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(
-  cors({
-    origin: "*",
-  })
-);
+app.use(cors({ origin: "*" }));
 app.use(checkForAuth);
 
 // ROUTES
@@ -49,13 +46,72 @@ app.use("/cart", cart);
 app.use("/token", token);
 app.use("/ocr", ocr);
 
-// Error handling middleware
+app.post("/vertex-ai", async (req, res) => {
+  try {
+    const { detectedText, allProductNames } = req.body;
+    if (!detectedText || !Array.isArray(allProductNames)) {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
+
+    console.log("📩 Received Request:", { detectedText, allProductNames });
+
+    const prompt = `Translate the grocery list to English and match it to available products. Extract structured data in [[quantity, name, unit], ...] format if the available unit is in grams and user given in kg convert the kg in grams and adjust the qantity accordingly also true for vice versa. only provide the array no text before after only array. Grocery List: "${detectedText}". Available products: ${JSON.stringify(
+      allProductNames
+    )}`;
+
+    console.log("📝 Generated Prompt:", prompt);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      }
+    );
+
+    console.log("📡 Gemini API Response Status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Gemini API Error:", errorData);
+      return res.status(response.status).json({ error: errorData });
+    }
+
+    const data = await response.json();
+    let aiResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+
+    // Clean the response if it's wrapped in a code block
+    aiResponse = aiResponse.replace(/```json|```/g, "").trim();
+
+    console.log("✅ AI Extracted Data:", aiResponse);
+
+    try {
+      const parsedResponse = JSON.parse(aiResponse);
+      res.json(parsedResponse);
+    } catch (error) {
+      console.error("❌ JSON Parsing Error:", error);
+      res
+        .status(500)
+        .json({ error: "Invalid AI response format", rawResponse: aiResponse });
+    }
+  } catch (error) {
+    console.error("❌ Processing Error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to process text", details: error.message });
+  }
+});
+
+// 🛑 Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("❌ Server Error:", err.stack);
   res.status(500).send("Something broke!");
 });
 
-// START THE SERVER
+// 🚀 START THE SERVER
 const server = app.listen(PORT, () => {
-  console.log(`Server listening on Port ${PORT} ...`);
+  console.log(`✅ Server listening on Port ${PORT} ...`);
 });

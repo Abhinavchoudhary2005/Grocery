@@ -3,7 +3,7 @@ const User = require("../modules/user");
 const Product = require("../modules/product");
 
 const addToCart = async (req, res) => {
-  const { _id, image, name, old_price, new_price, category } = req.body;
+  const { _id, image, name, old_price, new_price, category, weight } = req.body;
 
   if (!_id || !image || !name || !old_price || !new_price) {
     return res.status(400).send({ error: "All product fields are required." });
@@ -40,6 +40,7 @@ const addToCart = async (req, res) => {
         old_price,
         new_price,
         category,
+        weight,
         quantity: 1,
         totalPrice: new_price,
       };
