@@ -1,7 +1,7 @@
 const { SpeechClient } = require("@google-cloud/speech");
 const dotenv = require("dotenv");
-const multer = require("multer");
-const upload = multer({ limits: { fileSize: 50 * 1024 * 1024 } });
+const { PassThrough } = require("stream");
+const ffmpeg = require("fluent-ffmpeg");
 
 dotenv.config();
 
@@ -21,48 +21,59 @@ const client = new SpeechClient({
 });
 
 const transcribe = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No audio file uploaded" });
-  }
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No audio file received" });
+    }
 
-  console.log("Received file:", req.file.originalname, req.file.size, "bytes");
+    const audioBuffer = req.file.buffer;
 
-  // Convert WebM to FLAC
-  const inputStream = Readable.from(req.file.buffer);
-  const chunks = [];
+    // Convert to Linear16 format using ffmpeg
+    const convertedAudio = await convertToLinear16(audioBuffer);
 
-  ffmpeg(inputStream)
-    .outputFormat("flac")
-    .on("data", (chunk) => chunks.push(chunk))
-    .on("end", async () => {
-      const flacBuffer = Buffer.concat(chunks);
-      console.log("Converted audio size:", flacBuffer.length, "bytes");
-
-      // Send to Google Speech API
-      const audio = { content: flacBuffer.toString("base64") };
-      const config = {
-        encoding: "FLAC",
-        sampleRateHertz: 16000, // Adjust according to your input
+    const request = {
+      audio: { content: convertedAudio.toString("base64") },
+      config: {
+        encoding: "LINEAR16",
+        sampleRateHertz: 16000,
         languageCode: "en-US",
-      };
+      },
+    };
 
-      try {
-        const [response] = await client.recognize({ audio, config });
-        const transcript = response.results
-          .map((result) => result.alternatives[0].transcript)
-          .join(" ");
+    const [response] = await client.recognize(request);
+    const transcription = response.results
+      .map((result) => result.alternatives[0].transcript)
+      .join("\n");
 
-        res.json({ transcript });
-      } catch (error) {
-        console.error("Transcription Error:", error);
-        res.status(500).json({ error: "Speech recognition failed" });
-      }
-    })
-    .on("error", (err) => {
-      console.error("FFmpeg Error:", err);
-      res.status(500).json({ error: "Audio conversion failed" });
-    })
-    .run();
+    res.json({ transcription });
+  } catch (error) {
+    console.error("Transcription error:", error);
+    res.status(500).json({ error: "Failed to process audio" });
+  }
+};
+
+// Convert audio to LINEAR16 format
+const convertToLinear16 = (inputBuffer) => {
+  return new Promise((resolve, reject) => {
+    const passthrough = new PassThrough();
+    const outputBuffer = [];
+
+    const ffmpegProcess = ffmpeg()
+      .input(passthrough)
+      .audioFrequency(16000)
+      .audioChannels(1)
+      .audioCodec("pcm_s16le")
+      .format("wav")
+      .on("error", (error) => reject(error));
+
+    // Capture the output into the buffer
+    ffmpegProcess
+      .pipe(new PassThrough())
+      .on("data", (chunk) => outputBuffer.push(chunk))
+      .on("end", () => resolve(Buffer.concat(outputBuffer)));
+
+    passthrough.end(inputBuffer);
+  });
 };
 
 module.exports = { transcribe };
