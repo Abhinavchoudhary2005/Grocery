@@ -18,9 +18,11 @@ const OCR = () => {
   const toggleOptions = () => setShowOptions(!showOptions);
 
   const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
+    const fileInput = event.target;
+    const file = fileInput.files[0];
     if (!file) return;
-    processImage(await fileToBase64(file));
+    await processImage(await fileToBase64(file));
+    fileInput.value = "";
   };
 
   const startScanner = async () => {

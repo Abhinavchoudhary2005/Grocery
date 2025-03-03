@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { FiMic } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { CartContext } from "../context/CartContex.jsx";
+import { CartContext } from "../context/CartContex";
 import { Productcontext } from "../context/Productcontext";
+import RecordRTC from "recordrtc";
 
 const VoiceAssistant = () => {
   const { fetchCart } = useContext(CartContext);
@@ -11,58 +12,62 @@ const VoiceAssistant = () => {
 
   const [listening, setListening] = useState(false);
   const [recognizedText, setRecognizedText] = useState("");
-  const [recognition, setRecognition] = useState(null);
+  const [recorder, setRecorder] = useState(null);
 
+  // 🎙 Start Recording
   const startListening = async () => {
-    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
-      toast.error("Speech Recognition not supported in this browser.");
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop()); // Release the microphone
+      const audioRecorder = new RecordRTC(stream, {
+        type: "audio",
+        mimeType: "audio/webm",
+      });
 
-      const speech = new (window.SpeechRecognition ||
-        window.webkitSpeechRecognition)();
-      speech.lang = "en-US";
-      speech.continuous = true; // ✅ Keep listening until stopped
-      speech.interimResults = true;
-
-      speech.onstart = () => {
-        setListening(true);
-        setRecognizedText("");
-        console.log("Listening started...");
-      };
-
-      speech.onresult = (event) => {
-        const text = Array.from(event.results)
-          .map((result) => result[0].transcript)
-          .join("");
-        setRecognizedText(text);
-      };
-
-      speech.onerror = (event) => {
-        console.error("Speech Recognition Error:", event.error);
-        toast.error(`Error: ${event.error}`);
-        setListening(false);
-      };
-
-      setRecognition(speech);
-      speech.start();
+      audioRecorder.startRecording();
+      setRecorder(audioRecorder);
+      setListening(true);
+      setRecognizedText("");
     } catch (error) {
-      toast.error("Microphone access is required to use voice commands.");
+      toast.error("Microphone access denied!");
     }
   };
 
-  const stopListening = () => {
-    if (recognition) {
-      recognition.stop();
-    }
-    setListening(false);
-    if (recognizedText.trim()) processVoiceCommand(recognizedText);
+  // 🛑 Stop Recording & Transcribe
+  const stopListening = async () => {
+    if (!recorder) return;
+
+    recorder.stopRecording(async () => {
+      setListening(false);
+      const blob = recorder.getBlob();
+
+      console.log("Recorded audio size:", blob.size, "bytes");
+
+      const formData = new FormData();
+      formData.append("audio", blob, "audio.wav");
+
+      try {
+        toast("Transcribing...");
+        const response = await fetch(
+          `${import.meta.env.VITE_API_KEY}/transcribe`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await response.json();
+        setRecognizedText(data.transcript || "No text recognized");
+
+        if (data.transcript) {
+          processVoiceCommand(data.transcript);
+        }
+      } catch (error) {
+        toast.error("Error transcribing voice.");
+      }
+    });
   };
 
+  // 🛍 Process Voice Command
   const processVoiceCommand = async (spokenText) => {
     toast("Processing voice input...");
     try {
