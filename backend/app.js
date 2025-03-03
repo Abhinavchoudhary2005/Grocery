@@ -54,6 +54,6 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something broke!");
 });
 
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`✅ Server listening on Port ${PORT} ...`);
 });
