@@ -17,7 +17,6 @@ import logo from "../assets/logo.png";
 import * as jwt_decode from "jwt-decode";
 import SearchBar from "./SearchBar.jsx";
 import OCR from "./OCR.jsx";
-import VoiceAssistant from "./VoiceAssistant.jsx";
 
 // Categories for your navigation
 const categories = [
@@ -147,8 +146,6 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {/* Scan or Upload Option */}
             <OCR />
-
-            <VoiceAssistant />
 
             <div
               className="relative cursor-pointer"
