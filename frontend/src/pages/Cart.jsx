@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const navigate = useNavigate();
-
   const { cart, fetchCart, totalCartValue, triggerCartChange } =
     useContext(CartContext);
   const token = localStorage.getItem("token");
@@ -36,25 +35,17 @@ const Cart = () => {
   }, [cart, totalCartValue]);
 
   const handleUpdateCart = async (item, newQuantity) => {
-    const updatedItem = {
-      ...item,
-      quantity: newQuantity,
-    };
-
-    // Optimistically update local UI
+    const updatedItem = { ...item, quantity: newQuantity };
     const updatedCart = localCart.map((cartItem) =>
       cartItem._id === item._id ? updatedItem : cartItem
     );
     setLocalCart(updatedCart);
 
     try {
-      let endpoint;
-
-      if (newQuantity < item.quantity) {
-        endpoint = `${import.meta.env.VITE_API_KEY}/cart/removeProduct`;
-      } else {
-        endpoint = `${import.meta.env.VITE_API_KEY}/cart/addtocart`;
-      }
+      let endpoint =
+        newQuantity < item.quantity
+          ? `${import.meta.env.VITE_API_KEY}/cart/removeProduct`
+          : `${import.meta.env.VITE_API_KEY}/cart/addtocart`;
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -66,19 +57,40 @@ const Cart = () => {
       });
 
       const responseData = await res.json();
-
       if (!res.ok) {
         toast.error(responseData.error || "Failed to update cart.");
-        setLocalCart(cart); // Roll back UI on failure
+        setLocalCart(cart);
         return;
       }
-
       triggerCartChange();
     } catch (error) {
       toast.error(
         error.message || "An error occurred while updating the cart."
       );
-      setLocalCart(cart); // Roll back UI on error
+      setLocalCart(cart);
+    }
+  };
+
+  const handleEmptyCart = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_KEY}/cart/empty`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to empty cart.");
+        return;
+      }
+
+      setLocalCart([]); // Clear cart UI instantly
+      triggerCartChange();
+      toast.success("Cart emptied successfully!");
+    } catch (error) {
+      toast.error("Error emptying cart.");
     }
   };
 
@@ -112,7 +124,6 @@ const Cart = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Selected Items */}
           <div className="lg:col-span-2">
             <h2 className="text-3xl font-bold mb-6 text-gray-800">
               Selected Items
@@ -188,13 +199,19 @@ const Cart = () => {
                 <span>₹{(subtotal + deliveryCharge).toFixed(2)} </span>
               </div>
             </div>
+
             <button
               className="bg-green-600 text-white w-full py-3 mt-4 rounded-lg hover:bg-green-700"
-              onClick={() => {
-                navigate("/checkout");
-              }}
+              onClick={() => navigate("/checkout")}
             >
               Proceed To Checkout
+            </button>
+
+            <button
+              className="bg-red-500 text-white w-full py-3 mt-2 rounded-lg hover:bg-red-600"
+              onClick={handleEmptyCart}
+            >
+              Empty Cart
             </button>
           </div>
         </div>

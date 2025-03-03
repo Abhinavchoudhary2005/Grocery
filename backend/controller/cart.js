@@ -203,4 +203,34 @@ const getorder = async (req, res) => {
   }
 };
 
-module.exports = { addToCart, getCart, removeProduct, getorder, order };
+const emptyCart = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).send({ error: "User not found." });
+    }
+
+    user.cart = [];
+    user.totalCartValue = 0;
+
+    await user.save();
+
+    res.status(200).send({ message: "Cart emptied successfully.", cart: [] });
+  } catch (error) {
+    console.error("Empty Cart Error:", error);
+    res.status(500).send({
+      error: "An error occurred while emptying the cart.",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = {
+  addToCart,
+  getCart,
+  removeProduct,
+  getorder,
+  order,
+  emptyCart,
+};
