@@ -10,7 +10,7 @@ const VoiceAssistant = () => {
   const token = localStorage.getItem("token");
 
   const [listening, setListening] = useState(false);
-  const [recognizedText, setRecognizedText] = useState(""); // ✅ Store recognized text
+  const [recognizedText, setRecognizedText] = useState("");
   const [recognition, setRecognition] = useState(null);
 
   const startListening = async () => {
@@ -26,12 +26,12 @@ const VoiceAssistant = () => {
       const speech = new (window.SpeechRecognition ||
         window.webkitSpeechRecognition)();
       speech.lang = "en-US";
-      speech.continuous = false;
-      speech.interimResults = true; // ✅ Enable interim results for live updates
+      speech.continuous = true; // ✅ Keep listening until stopped
+      speech.interimResults = true;
 
       speech.onstart = () => {
         setListening(true);
-        setRecognizedText(""); // ✅ Clear previous text
+        setRecognizedText("");
         console.log("Listening started...");
       };
 
@@ -39,13 +39,7 @@ const VoiceAssistant = () => {
         const text = Array.from(event.results)
           .map((result) => result[0].transcript)
           .join("");
-        setRecognizedText(text); // ✅ Update recognized text in UI
-      };
-
-      speech.onend = () => {
-        setListening(false);
-        console.log("Listening ended.");
-        if (recognizedText.trim()) processVoiceCommand(recognizedText);
+        setRecognizedText(text);
       };
 
       speech.onerror = (event) => {
@@ -62,8 +56,11 @@ const VoiceAssistant = () => {
   };
 
   const stopListening = () => {
-    if (recognition) recognition.stop();
+    if (recognition) {
+      recognition.stop();
+    }
     setListening(false);
+    if (recognizedText.trim()) processVoiceCommand(recognizedText);
   };
 
   const processVoiceCommand = async (spokenText) => {
@@ -165,8 +162,7 @@ const VoiceAssistant = () => {
           <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div>
           <p className="text-white mt-4 text-lg">
             {recognizedText || "Listening..."}
-          </p>{" "}
-          {/* ✅ Shows live speech */}
+          </p>
           <button
             onClick={stopListening}
             className="absolute bottom-10 px-4 py-2 bg-red-500 text-white rounded-lg"
