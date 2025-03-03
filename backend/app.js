@@ -25,17 +25,12 @@ mongoose
     serverSelectionTimeoutMS: 60000,
     family: 4, // Use IPv4
   })
-  .then(() => {
-    console.log("✅ MongoDB connected...");
-  })
-  .catch((error) => {
-    console.error("❌ MongoDB connection error:", error);
-  });
+  .then(() => console.log("✅ MongoDB connected..."))
+  .catch((error) => console.error("❌ MongoDB connection error:", error));
 
 // MIDDLEWARE
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" })); // Apply CORS once
 app.use(checkForAuth);
-app.use(cors());
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
@@ -48,12 +43,13 @@ app.use("/cart", cart);
 app.use("/token", token);
 app.use("/ocr", ocr);
 app.use("/vertex-ai", vertexAi);
+app.use("/transcribe", transcribe); // Add transcribe route
 
+// ERROR HANDLING
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err.stack);
   res.status(500).send("Something broke!");
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server listening on Port ${PORT} ...`);
-});
+// START SERVER
+app.listen(PORT, () => console.log(`✅ Server listening on Port ${PORT} ...`));
