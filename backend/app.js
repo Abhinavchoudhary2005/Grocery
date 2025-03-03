@@ -48,7 +48,6 @@ app.use("/cart", cart);
 app.use("/token", token);
 app.use("/ocr", ocr);
 app.use("/vertex-ai", vertexAi);
-app.use("/transcribe", transcribe);
 
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err.stack);
