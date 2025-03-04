@@ -116,6 +116,8 @@ const OTPInput = ({ otp, setOtp }) => {
 };
 
 const SignUp = ({
+  name,
+  setName,
   email,
   setEmail,
   password,
@@ -139,6 +141,21 @@ const SignUp = ({
 
     {!otpSent ? (
       <>
+        <div className="form-control mb-4">
+          <label htmlFor="name" className="label">
+            Full Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Your Name"
+            className="input input-bordered w-full"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+
         <div className="form-control mb-4">
           <label htmlFor="email" className="label">
             Email Address
@@ -240,6 +257,7 @@ const SignUp = ({
 
 const Auth = () => {
   const [loginsignup, setLoginsignup] = useState("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -264,7 +282,7 @@ const Auth = () => {
         const res = await fetch(`${import.meta.env.VITE_API_KEY}/user/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, role }),
+          body: JSON.stringify({ name, email, password, role, otp }),
         });
 
         const result = await res.json();
@@ -290,7 +308,7 @@ const Auth = () => {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, otp, role }),
+            body: JSON.stringify({ email, otp, role, password, name }),
           }
         );
 
@@ -358,6 +376,8 @@ const Auth = () => {
           />
         ) : (
           <SignUp
+            name={name}
+            setName={setName}
             email={email}
             setEmail={setEmail}
             password={password}

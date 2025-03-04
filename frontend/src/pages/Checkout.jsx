@@ -9,7 +9,6 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [subtotal, setSubtotal] = useState(totalCartValue);
-  const [deliveryCharge] = useState(30);
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     address: "",
@@ -17,6 +16,10 @@ const Checkout = () => {
     pincode: "",
     phone: "",
   });
+
+  const deliveryChargePerSeller = 30;
+  const uniqueSellers = new Set(cart.map((item) => item.postedByUserId));
+  const totalDeliveryCharge = uniqueSellers.size * deliveryChargePerSeller;
 
   useEffect(() => {
     if (!token) {
@@ -54,8 +57,8 @@ const Checkout = () => {
       user: userId,
       products,
       shippingDetails: shippingInfo,
-      deliveryCharge,
-      totalAmount: subtotal + deliveryCharge,
+      deliveryCharge: totalDeliveryCharge,
+      totalAmount: subtotal + totalDeliveryCharge,
     };
 
     try {
@@ -166,11 +169,11 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between text-lg">
               <span>Delivery Charge</span>
-              <span>₹{deliveryCharge.toFixed(2)}</span>
+              <span>₹{totalDeliveryCharge.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xl font-bold mt-2">
               <span>Total</span>
-              <span>₹{(subtotal + deliveryCharge).toFixed(2)}</span>
+              <span>₹{(subtotal + totalDeliveryCharge).toFixed(2)}</span>
             </div>
           </div>
           <button

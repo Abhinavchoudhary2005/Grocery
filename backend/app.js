@@ -11,6 +11,7 @@ const cart = require("./routes/cart");
 const token = require("./routes/token");
 const ocr = require("./routes/ocr");
 const vertexAi = require("./routes/vertexAi");
+const orders = require("./routes/order");
 
 // PORT
 const PORT = process.env.PORT || 8000;
@@ -42,6 +43,7 @@ app.use("/cart", cart);
 app.use("/token", token);
 app.use("/ocr", ocr);
 app.use("/vertex-ai", vertexAi);
+app.use("/orders", orders);
 
 // ERROR HANDLING
 app.use((err, req, res, next) => {

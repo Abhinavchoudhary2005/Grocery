@@ -3,7 +3,16 @@ const User = require("../modules/user");
 const Product = require("../modules/product");
 
 const addToCart = async (req, res) => {
-  const { _id, image, name, old_price, new_price, category, weight } = req.body;
+  const {
+    _id,
+    image,
+    name,
+    old_price,
+    new_price,
+    category,
+    weight,
+    postedByUserId,
+  } = req.body;
 
   if (!_id || !image || !name || !old_price || !new_price) {
     return res.status(400).send({ error: "All product fields are required." });
@@ -43,6 +52,7 @@ const addToCart = async (req, res) => {
         weight,
         quantity: 1,
         totalPrice: new_price,
+        postedByUserId,
       };
 
       user.cart.push(product);
@@ -143,17 +153,15 @@ const removeProduct = async (req, res) => {
 
 const order = async (req, res) => {
   try {
-    const { products, shippingDetails, deliveryCharge } = req.body;
-
+    const { products, shippingDetails } = req.body;
     if (!products || products.length === 0) {
       return res.status(400).json({ error: "No products in the order." });
     }
 
-    const userId = req.user._id; // Assuming req.user is populated from middleware
+    const userId = req.user._id;
+    const sellerOrders = new Map();
+    const deliveryChargePerSeller = 30;
 
-    let totalAmount = 0;
-
-    // Validate product information and calculate total
     for (const item of products) {
       const product = await Product.findById(item.product);
       if (!product || !product.available) {
@@ -161,27 +169,44 @@ const order = async (req, res) => {
           .status(404)
           .json({ error: `Product not found: ${item.product}` });
       }
-      totalAmount += product.new_price * item.quantity;
+
+      const sellerId = product.postedByUserId;
+      if (!sellerOrders.has(sellerId)) {
+        sellerOrders.set(sellerId, { products: [], totalAmount: 0 });
+      }
+
+      const sellerOrder = sellerOrders.get(sellerId);
+      sellerOrder.products.push({
+        productId: product._id,
+        productName: product.name,
+        quantity: item.quantity,
+        weight: product.quantity,
+      });
+      sellerOrder.totalAmount += product.new_price * item.quantity;
     }
 
-    totalAmount += deliveryCharge;
+    const orderResponses = [];
+    for (const [sellerId, orderDetails] of sellerOrders.entries()) {
+      orderDetails.totalAmount += deliveryChargePerSeller;
 
-    // Create order
-    const newOrder = new Order({
-      user: userId,
-      products,
-      totalAmount,
-      deliveryCharge,
-      shippingDetails,
-      paymentStatus: "Pending",
-      orderStatus: "Processing",
-    });
+      const newOrder = new Order({
+        user: userId,
+        sellerId: sellerId,
+        products: orderDetails.products,
+        totalAmount: orderDetails.totalAmount,
+        deliveryCharge: deliveryChargePerSeller,
+        shippingDetails,
+        paymentStatus: "Pending",
+        orderStatus: "Processing",
+      });
 
-    await newOrder.save();
+      await newOrder.save();
+      orderResponses.push(newOrder);
+    }
 
     return res
       .status(201)
-      .json({ message: "Order placed successfully!", newOrder });
+      .json({ message: "Orders placed successfully!", orders: orderResponses });
   } catch (error) {
     console.error("Error placing order:", error);
     return res.status(500).json({ error: "Internal server error." });
@@ -192,9 +217,7 @@ const getorder = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming req.user is populated from middleware
 
-    const orders = await Order.find({ user: userId })
-      .populate("products.product", "name image new_price")
-      .sort({ createdAt: -1 });
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
 
     return res.status(200).json(orders);
   } catch (error) {

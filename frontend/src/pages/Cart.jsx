@@ -13,7 +13,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [localCart, setLocalCart] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
-  const deliveryCharge = 30;
+  const deliveryChargePerSeller = 30;
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -33,6 +33,13 @@ const Cart = () => {
     setLocalCart(cart);
     setSubtotal(totalCartValue);
   }, [cart, totalCartValue]);
+
+  const calculateTotalDeliveryCharge = () => {
+    const sellers = new Set(localCart.map((item) => item.postedByUserId));
+    return sellers.size * deliveryChargePerSeller;
+  };
+
+  const totalDeliveryCharge = calculateTotalDeliveryCharge();
 
   const handleUpdateCart = async (item, newQuantity) => {
     const updatedItem = { ...item, quantity: newQuantity };
@@ -86,7 +93,7 @@ const Cart = () => {
         return;
       }
 
-      setLocalCart([]); // Clear cart UI instantly
+      setLocalCart([]);
       triggerCartChange();
       toast.success("Cart emptied successfully!");
     } catch (error) {
@@ -180,7 +187,6 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="p-6 bg-white shadow-md rounded-lg h-auto lg:mt-14 sm:mt-0">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               Order Summary
@@ -192,11 +198,11 @@ const Cart = () => {
               </div>
               <div className="flex justify-between text-lg">
                 <span>Delivery charge</span>
-                <span>₹{deliveryCharge.toFixed(2)} </span>
+                <span>₹{totalDeliveryCharge.toFixed(2)} </span>
               </div>
               <div className="flex justify-between text-xl font-bold mt-2">
                 <span>Total</span>
-                <span>₹{(subtotal + deliveryCharge).toFixed(2)} </span>
+                <span>₹{(subtotal + totalDeliveryCharge).toFixed(2)} </span>
               </div>
             </div>
 
@@ -206,9 +212,8 @@ const Cart = () => {
             >
               Proceed To Checkout
             </button>
-
             <button
-              className="bg-red-500 text-white w-full py-3 mt-2 rounded-lg hover:bg-red-600"
+              className="bg-red-600 text-white w-full py-3 mt-4 rounded-lg hover:bg-red-700"
               onClick={handleEmptyCart}
             >
               Empty Cart

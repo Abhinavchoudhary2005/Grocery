@@ -7,17 +7,30 @@ const orderSchema = new mongoose.Schema(
       ref: "users",
       required: true,
     },
+    sellerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+    },
     products: [
       {
-        product: {
+        productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
+          required: true,
+        },
+        productName: {
+          type: String,
           required: true,
         },
         quantity: {
           type: Number,
           required: true,
           min: 1,
+        },
+        weight: {
+          type: String,
+          required: true,
         },
       },
     ],
@@ -53,8 +66,8 @@ const orderSchema = new mongoose.Schema(
     },
     orderStatus: {
       type: String,
-      enum: ["Processing", "Shipped", "Delivered", "Cancelled"],
-      default: "Processing",
+      enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
+      default: "Pending",
     },
     orderDate: {
       type: Date,

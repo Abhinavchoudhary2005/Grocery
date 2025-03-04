@@ -63,6 +63,7 @@ const Card = ({ product }) => {
       category: product.category,
       quantity: cartCount + 1,
       weight: product.quantity,
+      postedByUserId: product.postedByUserId,
     };
 
     try {

@@ -8,7 +8,7 @@ import {
   FiInfo,
   FiPhoneCall,
   FiPlusCircle,
-  FiCamera,
+  FiInbox,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -196,20 +196,26 @@ const Navbar = () => {
                     <FiInfo className="mr-2 ml-2" /> About Us
                   </div>
                   {userRole === "SELLER" && (
-                    <div
-                      onClick={() => navigate("/sell")}
-                      className="flex items-center p-2 hover:bg-gray-200 cursor-pointer"
-                    >
-                      <FiPlusCircle className="mr-2 ml-2" /> Sell Product
-                    </div>
-                  )}
-                  {userRole === "SELLER" && (
-                    <div
-                      onClick={() => navigate("/listed-products")}
-                      className="flex items-center p-2 hover:bg-gray-200 cursor-pointer"
-                    >
-                      <FiPackage className="mr-2 ml-2" /> Listed Products
-                    </div>
+                    <>
+                      <div
+                        onClick={() => navigate("/sell")}
+                        className="flex items-center p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        <FiPlusCircle className="mr-2 ml-2" /> Sell Product
+                      </div>
+                      <div
+                        onClick={() => navigate("/listed-products")}
+                        className="flex items-center p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        <FiPackage className="mr-2 ml-2" /> Listed Products
+                      </div>
+                      <div
+                        onClick={() => navigate("/recivedOrders")}
+                        className="flex items-center p-2 hover:bg-gray-200 cursor-pointer"
+                      >
+                        <FiInbox className="mr-2 ml-2" /> Received Orders
+                      </div>
+                    </>
                   )}
                   {token ? (
                     <div

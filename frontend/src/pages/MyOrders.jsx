@@ -63,11 +63,11 @@ const MyOrders = () => {
               <ul className="list-disc ml-6">
                 {order.products.map((productItem) => (
                   <li
-                    key={productItem.product?._id || Math.random()}
+                    key={productItem.productId || Math.random()}
                     className="text-gray-600"
                   >
-                    {productItem.product
-                      ? `${productItem.product.name} x ${productItem.quantity}`
+                    {productItem.productId
+                      ? `${productItem.weight} of ${productItem.productName} x ${productItem.quantity}`
                       : "Product information not available"}
                   </li>
                 ))}
@@ -80,6 +80,8 @@ const MyOrders = () => {
                 {order.shippingDetails?.pincode || "N/A"}, Contact:{" "}
                 {order.shippingDetails?.phone || "N/A"}
               </p>
+              <h3 className="font-medium mt-4">Order Status:</h3>
+              <p className="text-gray-600">{order.orderStatus}</p>
             </div>
           ))}
         </div>
