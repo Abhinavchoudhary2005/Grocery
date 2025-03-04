@@ -99,7 +99,8 @@ const Footer = () => {
       <div className="text-center mt-10 border-t pt-6">
         <p>
           Created by{" "}
-          <span className="text-yellow-400 font-semibold">RedHack</span> with ❤️
+          <span className="text-yellow-400 font-semibold">Web Wizards</span>{" "}
+          with ❤️
         </p>
       </div>
     </footer>
