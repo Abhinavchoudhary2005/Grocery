@@ -10,7 +10,7 @@ const categories = [
   "Dairy",
   "Grains",
   "Beverages",
-  "Salts/Spices",
+  "Salts Spices",
   "Bakery",
   "Dry Fruits",
   "Oils",
