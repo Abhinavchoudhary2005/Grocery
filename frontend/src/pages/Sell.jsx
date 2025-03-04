@@ -10,6 +10,10 @@ const categories = [
   "Dairy",
   "Grains",
   "Beverages",
+  "Salts/Spices",
+  "Bakery",
+  "Dry Fruits",
+  "Oils",
   // Add more categories as needed
 ];
 
