@@ -173,7 +173,11 @@ const Card = ({ product }) => {
     <div className="card w-72 bg-white shadow-lg rounded-2xl p-4 hover:shadow-2xl transition-shadow duration-300">
       <figure className="flex justify-center">
         <img
-          src={`${import.meta.env.VITE_API_KEY}/images/${product.image}`}
+          src={
+            product.image.startsWith("http")
+              ? product.image
+              : `${import.meta.env.VITE_API_KEY}/images/${product.image}`
+          }
           alt={product.name}
           className="h-40 w-40 object-cover rounded-lg"
         />

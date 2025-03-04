@@ -47,7 +47,7 @@ app.use("/orders", orders);
 
 // ERROR HANDLING
 app.use((err, req, res, next) => {
-  console.error("❌ Server Error:", err.stack);
+  console.error("❌ Server Error:", err.stack, err);
   res.status(500).send("Something broke!");
 });
 

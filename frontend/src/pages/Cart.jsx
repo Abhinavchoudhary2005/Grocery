@@ -143,12 +143,17 @@ const Cart = () => {
                 >
                   <div className="flex items-center">
                     <img
-                      src={`${import.meta.env.VITE_API_KEY}/images/${
-                        item.image
-                      }`}
+                      src={
+                        item.image.startsWith("http")
+                          ? item.image
+                          : `${import.meta.env.VITE_API_KEY}/images/${
+                              item.image
+                            }`
+                      }
                       alt={item.name}
                       className="w-16 h-16 object-cover mr-4 rounded"
                     />
+
                     <div>
                       <h3 className="text-lg font-medium text-green-800">
                         {item.name}

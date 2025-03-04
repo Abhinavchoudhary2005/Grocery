@@ -60,17 +60,27 @@ const SellPage = () => {
       method: "POST",
       body: productData,
       headers: {
-        Authorization: `${token}`, // Corrected token usage
+        Authorization: `${token}`,
       },
     })
-      .then((response) => response.json())
+      .then(async (response) => {
+        const contentType = response.headers.get("content-type");
+
+        if (!response.ok) {
+          // If the response isn't JSON, return the raw text error
+          if (!contentType || !contentType.includes("application/json")) {
+            const errorText = await response.text();
+            throw new Error(errorText || "Unknown error");
+          }
+        }
+      })
       .then((data) => {
         toast.success("Product listed successfully!");
         fetchProducts();
         navigate("/listed-products");
       })
       .catch((error) => {
-        toast.error("Failed to list the product.");
+        toast.error(`Failed: ${error.message}`);
         console.error(error);
       });
   };

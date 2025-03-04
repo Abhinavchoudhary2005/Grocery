@@ -1,19 +1,7 @@
 const express = require("express");
-const multer = require("multer");
-const { uploadProduct } = require("../controller/upload");
+const { uploadMulter, uploadProduct } = require("../controller/upload"); // ✅ Correct Import
 const { removeProduct } = require("../controller/remove");
 const { userIsAuth } = require("../controller/userIsAuth");
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "upload/images");
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const uploadMulter = multer({ storage });
 
 const router = express.Router();
 
