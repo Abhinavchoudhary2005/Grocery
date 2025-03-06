@@ -18,6 +18,10 @@ const Home = () => {
     { name: "Dairy", image: "🧀" },
     { name: "Grains", image: "🌾" },
     { name: "Beverages", image: "🥤" },
+    { name: "Salts Spices", image: "🧂" },
+    { name: "Bakery", image: "🥐" },
+    { name: "Dry Fruits", image: "🥜" },
+    { name: "Oils", image: "🛢️" },
   ];
 
   const testimonials = [

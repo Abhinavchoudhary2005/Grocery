@@ -14,13 +14,19 @@ const Category = ({ category }) => {
       let products = allProduct.filter(
         (product) => product.category.toLowerCase() === category.toLowerCase()
       );
-      
+
       if (sortOrder === "lowToHigh") {
         products.sort((a, b) => a.new_price - b.new_price);
       }
-      
+
+      if (sortOrder === "highToLow") {
+        products.sort((a, b) => b.new_price - a.new_price);
+      }
+
       setFilteredProducts(products);
-      setIsLoading(false);
+      setTimeout(function () {
+        setIsLoading(false);
+      }, 500);
     };
 
     fetchData();
@@ -40,6 +46,7 @@ const Category = ({ category }) => {
         >
           <option value="default">Sort by</option>
           <option value="lowToHigh">Price: Low to High</option>
+          <option value="highToLow">Price: High to Low</option>
         </select>
       </div>
 
@@ -54,7 +61,9 @@ const Category = ({ category }) => {
               <Card key={product._id} product={product} />
             ))
           ) : (
-            <p className="text-gray-600">No products available in this category.</p>
+            <p className="text-gray-600">
+              No products available in this category.
+            </p>
           )}
         </div>
       )}

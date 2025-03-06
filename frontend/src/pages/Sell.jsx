@@ -17,14 +17,18 @@ const categories = [
   // Add more categories as needed
 ];
 
+const units = ["kg", "g", "liter", "ml"];
+
 const SellPage = () => {
   const [productName, setProductName] = useState("");
   const [category, setCategory] = useState("");
   const [normalPrice, setNormalPrice] = useState("");
   const [discountedPrice, setDiscountedPrice] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [quantityValue, setQuantityValue] = useState("0");
+  const [quantityUnit, setQuantityUnit] = useState("kg");
   const [image, setImage] = useState(null);
-  const token = localStorage.getItem("token"); // Ensure the token is correctly stored
+  const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
 
   const { fetchProducts } = useContext(Productcontext);
 
@@ -37,6 +41,10 @@ const SellPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
+    const quantity = `${quantityValue} ${quantityUnit}`;
+
     // Validate form fields
     if (
       !productName ||
@@ -44,9 +52,24 @@ const SellPage = () => {
       !normalPrice ||
       !discountedPrice ||
       !quantity ||
+      !quantityValue ||
+      !quantityUnit ||
       !image
     ) {
       toast.error("Please fill in all the fields.");
+      setLoading(false);
+      return;
+    }
+
+    if (normalPrice <= 0 || discountedPrice <= 0) {
+      toast.error("Price cannot be negative or zero");
+      setLoading(false);
+      return;
+    }
+
+    if (quantityValue <= 0) {
+      toast.error("Quantity cannot be negative or zero");
+      setLoading(false);
       return;
     }
 
@@ -86,6 +109,9 @@ const SellPage = () => {
       .catch((error) => {
         toast.error(`Failed: ${error.message}`);
         console.error(error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
@@ -172,20 +198,27 @@ const SellPage = () => {
 
         {/* Quantity */}
         <div>
-          <label
-            htmlFor="quantity"
-            className="block text-sm font-semibold text-gray-700"
-          >
-            Quantity
-          </label>
-          <input
-            type="text"
-            id="quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            className="input input-bordered w-full"
-            placeholder="Enter product quantity"
-          />
+          <label className="block text-sm font-semibold">Quantity</label>
+          <div className="flex space-x-2">
+            <input
+              type="number"
+              value={quantityValue}
+              onChange={(e) => setQuantityValue(e.target.value)}
+              className="input input-bordered w-full"
+              placeholder="Enter quantity"
+            />
+            <select
+              value={quantityUnit}
+              onChange={(e) => setQuantityUnit(e.target.value)}
+              className="select select-bordered"
+            >
+              {units.map((unit) => (
+                <option key={unit} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Image Upload */}
@@ -207,8 +240,16 @@ const SellPage = () => {
 
         {/* Submit Button */}
         <div className="flex justify-between">
-          <button type="submit" className="btn btn-primary mt-4">
-            List Product
+          <button
+            type="submit"
+            className="btn btn-primary mt-4"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="loading loading-spinner"></span>
+            ) : (
+              "List Product"
+            )}
           </button>
         </div>
       </form>
