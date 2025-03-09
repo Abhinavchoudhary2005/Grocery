@@ -7,13 +7,12 @@ import { Productcontext } from "../context/Productcontext";
 const OCR = () => {
   const { fetchCart } = useContext(CartContext);
   const { allProduct } = useContext(Productcontext);
-  const token = localStorage.getItem("token");
-
   const [loading, setLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const token = localStorage.getItem("token");
 
   const toggleOptions = () => setShowOptions(!showOptions);
 
@@ -161,6 +160,11 @@ const OCR = () => {
       if (!userConfirmed) {
         toast("Cancelled.");
         setLoading(false);
+        return;
+      }
+
+      if (!token) {
+        toast.error("Please login to create a Cart");
         return;
       }
 

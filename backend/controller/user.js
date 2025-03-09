@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../modules/user");
 const { createTokenForUser } = require("../utils/token");
-const nodemailer = require("nodemailer");
 
 const login = async (req, res) => {
   try {
@@ -28,34 +27,20 @@ const login = async (req, res) => {
   }
 };
 
-const otpStorage = {};
-
-const sendOTP = async (email, otp) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_USER_PASSWORD,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: "Your OTP Code",
-    text: `Your OTP for account verification is: ${otp}`,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
 const signUp = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    let { name, email, password, phone, aadhar, role } = req.body;
 
-    if (!password) {
+    // Trim input values
+    name = name?.trim();
+    email = email?.trim();
+    phone = phone?.trim();
+    aadhar = aadhar?.trim();
+
+    if (!name) return res.status(400).json({ error: "Name is required" });
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    if (!password)
       return res.status(400).json({ error: "Password is required" });
-    }
 
     const validRoles = ["USER", "SELLER"];
     if (!validRoles.includes(role)) {
@@ -67,49 +52,30 @@ const signUp = async (req, res) => {
       return res.status(409).json({ error: "User already exists" });
     }
 
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStorage[email] = { otp, expiresAt: Date.now() + 300000 }; // Valid for 5 minutes
+    if (role === "SELLER") {
+      if (!phone)
+        return res.status(400).json({ error: "Phone number is required" });
+      // if (!aadhar)
+      //   return res.status(400).json({ error: "Aadhar number is required" });
+    }
 
-    // Send OTP via email
-    await sendOTP(email, otp);
+    // Use Promise.all to speed up hashing
+    const [salt, hashedPassword] = await Promise.all([
+      bcrypt.genSalt(10),
+      bcrypt.hash(password, 10),
+    ]);
 
-    res
-      .status(200)
-      .json({ message: "OTP sent to your email. Verify to continue." });
+    const newUser = await User.create(
+      role === "SELLER"
+        ? { name, email, phone, password: hashedPassword, salt, role }
+        : { name, email, password: hashedPassword, salt, role }
+    );
+
+    const token = createTokenForUser(newUser);
+    res.status(201).json({ uid: token, redirectUrl: "/" });
   } catch (error) {
     res.status(500).json({ error: `Error signing up: ${error.message}` });
   }
 };
 
-// OTP Verification Endpoint
-const verifyOTP = async (req, res) => {
-  try {
-    const { email, otp, password, name, role } = req.body;
-
-    if (!otpStorage[email] || otpStorage[email].otp !== parseInt(otp)) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
-
-    // OTP is correct, create user
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      salt,
-      role,
-    });
-
-    delete otpStorage[email]; // Remove OTP after successful verification
-
-    const token = createTokenForUser(newUser);
-    res.status(201).json({ uid: token, redirectUrl: "/" });
-  } catch (error) {
-    res.status(500).json({ error: `Error verifying OTP: ${error.message}` });
-  }
-};
-
-module.exports = { login, signUp, verifyOTP };
+module.exports = { login, signUp };

@@ -9,12 +9,12 @@ const Profile = () => {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const nameInputRef = useRef(null);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (token) {
       try {
-        const decoded =  jwt_decode.jwtDecode(token);
+        const decoded = jwt_decode.jwtDecode(token);
         setUser({
           name: decoded.name,
           email: decoded.email,
@@ -74,8 +74,22 @@ const Profile = () => {
     }
   };
 
+  if (!token) {
+    return (
+      <>
+        <h1 className="text-center text-black text-2xl -mt-7 font-semi Please login to see your profilebold h-screen flex justify-center items-center">
+          Please login to see your profile
+        </h1>
+      </>
+    );
+  }
+
   if (!user) {
-    return <p className="text-center text-gray-500">Loading profile...</p>;
+    return (
+      <h1 className="text-center text-black text-2xl -mt-7 font-semibold h-screen flex justify-center items-center">
+        Loading profile...
+      </h1>
+    );
   }
 
   return (
@@ -93,7 +107,10 @@ const Profile = () => {
             />
           ) : (
             <div className="flex items-center justify-center w-full h-full text-xl bg-gray-200 text-gray-500">
-              {user.name.split(" ").map((n) => n[0]).join("") || "No Photo"}
+              {user.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("") || "No Photo"}
             </div>
           )}
         </div>
@@ -130,6 +147,7 @@ const Profile = () => {
               onClick={handleNameClick}
               onChange={(e) => setUser({ ...user, name: e.target.value })}
               className="input input-bordered"
+              disabled
               ref={nameInputRef}
             />
           </div>
@@ -159,7 +177,6 @@ const Profile = () => {
               className="input input-bordered input-disabled"
             />
           </div>
-          
         </div>
       </div>
     </div>

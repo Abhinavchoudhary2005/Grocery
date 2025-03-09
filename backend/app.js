@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const cors = require("cors");
 const { checkForAuth } = require("./middleware/auth");
-const admin = require("./routes/admin");
+const adminRoute = require("./routes/admin");
 const api = require("./routes/api");
 const user = require("./routes/user");
 const cart = require("./routes/cart");
@@ -12,7 +12,7 @@ const token = require("./routes/token");
 const ocr = require("./routes/ocr");
 const vertexAi = require("./routes/vertexAi");
 const orders = require("./routes/order");
-
+const otp = require("./routes/otp");
 // PORT
 const PORT = process.env.PORT || 8000;
 
@@ -35,10 +35,11 @@ app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 // ROUTES
-app.use("/admin", admin);
+app.use("/admin", adminRoute);
 app.use("/images", express.static(path.join(__dirname, "/upload/images")));
 app.use("/api", api);
 app.use("/user", user);
+app.use("/otp", otp);
 app.use("/cart", cart);
 app.use("/token", token);
 app.use("/ocr", ocr);
