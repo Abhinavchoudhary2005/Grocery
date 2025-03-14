@@ -52,11 +52,8 @@ const chatbot = async (req, res) => {
         - If the user says "add these to cart," return the list they provided.
         - Available products: ${productList || "No products available"}.
         - If listing products, only mention available products.
+        -if user ask for recipe ingrident provide it remeber you dont have constraint to provide information only on the products you see above.
     
-        Respond concisely in markdown format:
-        - Use **bullet points** for lists.
-        - If providing a list, end with **"Do you want to add these items to your cart?"**
-        - If confirming cart addition, avoid asking again.
         - If user says anaylze the cart 
                 Analyze the user's cart and provide a category breakdown:
 
@@ -69,6 +66,10 @@ const chatbot = async (req, res) => {
                 - If categories are unbalanced (e.g., too much dairy or few vegetables), suggest a balanced approach.  
         -  if user says anaylze the cart dont end with **"Do you want to add these items to your cart?"**
     
+        Respond concisely in markdown format:
+        - Use **bullet points** for lists.
+        - If providing a list, end with **"Do you want to add these items to your cart?"** and make it bold
+        - If confirming cart addition, avoid asking again.
         **User query:** ${userMessage}
       `;
 

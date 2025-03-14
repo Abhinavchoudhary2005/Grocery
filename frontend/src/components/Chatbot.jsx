@@ -69,28 +69,30 @@ const Chatbot = () => {
     } else if (currentStep === "ingredient_list") {
       fetchResponse(`Give the ingredient list for ${userInput}`);
       setCurrentStep(null);
-    } else if (currentStep === "Analyze Cart") {
-      if (!cart) {
-        await fetchCart();
-      }
-      const simplyfycart = async () => {
-        const simplifiedCart = cart.map(
-          ({ name, new_price, weight, quantity }) => ({
-            name,
-            price: new_price,
-            weight,
-            quantity,
-          })
-        );
-        return simplifiedCart;
-      };
-      const simplifiedCartResponse = await simplyfycart();
-      fetchResponse(
-        `Analyze my Cart, cart:${JSON.stringify(simplifiedCartResponse)}`
-      );
-      setCurrentStep(null);
     } else {
-      fetchResponse(userInput);
+      if (userInput === "Analyze my Cart") {
+        if (!cart) {
+          await fetchCart();
+        }
+        const simplyfycart = async () => {
+          const simplifiedCart = cart.map(
+            ({ name, new_price, weight, quantity }) => ({
+              name,
+              price: new_price,
+              weight,
+              quantity,
+            })
+          );
+          return simplifiedCart;
+        };
+        const simplifiedCartResponse = await simplyfycart();
+        fetchResponse(
+          `Analyze my Cart, cart:${JSON.stringify(simplifiedCartResponse)}`
+        );
+        setCurrentStep(null);
+      } else {
+        fetchResponse(userInput);
+      }
     }
   };
 
