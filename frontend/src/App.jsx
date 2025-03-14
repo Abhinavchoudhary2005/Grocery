@@ -15,6 +15,7 @@ import ListedProductsPage from "./pages/ListedProductsPage";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ReceivedOrdersPage from "./pages/ReceivedOrdersPage";
+import Chatbot from "./components/Chatbot";
 
 export default function App() {
   const { theme } = useThemeStore();
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <div data-theme={theme}>
       <Navbar />
+      <Chatbot />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />

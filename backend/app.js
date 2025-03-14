@@ -13,6 +13,8 @@ const ocr = require("./routes/ocr");
 const vertexAi = require("./routes/vertexAi");
 const orders = require("./routes/order");
 const otp = require("./routes/otp");
+const chatbot = require("./routes/chatbot");
+
 // PORT
 const PORT = process.env.PORT || 8000;
 
@@ -45,6 +47,7 @@ app.use("/token", token);
 app.use("/ocr", ocr);
 app.use("/vertex-ai", vertexAi);
 app.use("/orders", orders);
+app.use("/chatbot", chatbot);
 
 // ERROR HANDLING
 app.use((err, req, res, next) => {
