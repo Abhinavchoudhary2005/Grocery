@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const router = express.Router();
 
-router.post("/detectText", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { base64Image } = req.body;
 
