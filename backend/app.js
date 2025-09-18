@@ -32,7 +32,14 @@ mongoose
   .catch((error) => console.error("❌ MongoDB connection error:", error));
 
 // MIDDLEWARE
-app.use(cors({ origin: "*" })); // Apply CORS once
+app.use(
+  cors({
+    origin: "https://grocery-xi-taupe.vercel.app", // frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+); // Apply CORS once
 app.use(checkForAuth);
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
