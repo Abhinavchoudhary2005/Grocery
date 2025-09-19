@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from "react";
+import { useState, useContext, useRef } from "react";
 import { FiCamera } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { CartContext } from "../context/CartContex.jsx";
@@ -76,7 +76,7 @@ const OCR = () => {
 
     try {
       const ocrResponse = await fetch(
-        `${import.meta.env.VITE_API_KEY}/api/ocr`,
+        `${import.meta.env.VITE_API_KEY}/detectText`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -88,7 +88,7 @@ const OCR = () => {
       let detectedText = ocrData.responses?.[0]?.fullTextAnnotation?.text || "";
 
       if (!detectedText) {
-        toast.error("No text detected.");
+        toast.error("My Free Trial has expired. Please try again later.");
         setLoading(false);
         return;
       }

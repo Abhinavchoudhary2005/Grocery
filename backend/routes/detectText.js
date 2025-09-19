@@ -1,7 +1,5 @@
-import express from "express";
-import dotenv from "dotenv";
-
-dotenv.config();
+// routes/detectText.js
+const express = require("express");
 const router = express.Router();
 
 router.post("/", async (req, res) => {
@@ -29,7 +27,6 @@ router.post("/", async (req, res) => {
     );
 
     const data = await googleResponse.json();
-
     res.json(data);
   } catch (error) {
     console.error("OCR Error:", error);
@@ -37,4 +34,4 @@ router.post("/", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router; // ✅ use CommonJS
